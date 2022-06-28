@@ -3,8 +3,8 @@ const mysql = require('mysql2');
 const inquirer = require("inquirer");
 require('dotenv').config();
 
+// Create database connection
 function connectDb () {
-    // Connect to database
     const connection = mysql.createConnection(
         {
         host: 'localhost',
@@ -18,6 +18,18 @@ function connectDb () {
     return connection;
 }
 
+// Return all records of a given table
+function getTable(table, conn) {
+    conn.query(`SELECT * FROM ${table}`, (err, results) => {
+        if (err) {
+            console.log(err);
+        }
+        console.log(results);
+        conn.end();
+      });
+}
+
+// Render Inquirer CLI
 function renderMenu() {
     inquirer
         .prompt([
@@ -45,16 +57,20 @@ function renderMenu() {
             if (response.selection === "Exit") {
                 return;
             }
+
+            // View all Departments
             if (response.selection === "View all Departments") {
-                // View all Departments
-                const dep_conn = connectDb();
+                getTable("department", connectDb())
+            }
 
-                dep_conn.query('SELECT * FROM department', function (err, results) {
-                  console.info(results);
-                });
+            // View all Roles
+            if (response.selection === "View all Roles") {
+                getTable("roles", connectDb())
+            }
 
-                dep_conn.end()
-
+            // View all Employees
+            if (response.selection === "View all Employees") {
+                getTable("employee", connectDb())
             }
 
             renderMenu();
