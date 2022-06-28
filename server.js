@@ -21,25 +21,13 @@ function connectDb () {
 
 // Return all records of a given table
 function getTable(table) {
-    conn = connectDb();
+    const conn = connectDb();
 
     conn.query(`SELECT * FROM ${table}`, (err, results) => {
         if (err) {
             console.log(err);
         }
         console.table(results);
-        conn.end();
-      });
-}
-
-function addRecord(table, cols, answers) {
-    conn = connectDb();
-
-    conn.query(`INSERT INTO ${table} (${cols}) VALUES ("${answers}")`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.log(results);
         conn.end();
       });
 }
@@ -99,20 +87,72 @@ function renderMenu() {
                         }
                     ])
                     .then(answer => {
-                        columns = "name"
-                        addRecord("department", columns, answer.dept_name)
+                        const conn = connectDb ()
+
+                        conn.query(`INSERT INTO department (name) VALUES ("${answer.dept_name}")`, (err, results) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            console.log(results);
+                            conn.end();
+                          });
+
                         renderMenu();
                     })
             }
 
             // Add a Role
             if (response.selection === "Add a Role") {
-                
+                inquirer
+                .prompt([
+                    {
+                        type: "input",
+                        message: "New Role Title",
+                        name: "role"
+                    },
+                    {
+                        type: "input",
+                        message: "Role Salary",
+                        name: "salary"
+                    },
+                    {
+                        type: "input",
+                        message: "Department ID",
+                        name: "dept_id"
+                    }
+                ])
+                .then(answer => {
+                    const conn = connectDb ()
+
+                    conn.query(`INSERT INTO roles (title, salary, department_id)
+                    VALUES ("${answer.role}", ${parseFloat(answer.salary)}, ${parseInt(answer.dept_id)})`,
+                    (err, results) => {
+                        if (err) {
+                            console.log(err);
+                        }
+                        console.log(results);
+                        conn.end();
+                      });
+
+                    renderMenu();
+                })
             }
 
             // Add an Employee
             if (response.selection === "Add an Employee") {
-                
+                inquirer
+                .prompt([
+                    {
+                        type: "input",
+                        message: "New Employee Name",
+                        name: "emp_name"
+                    }
+                ])
+                .then(answer => {
+                    columns = "name"
+                    addRecord("employee", columns, answer.emp_name)
+                    renderMenu();
+                })
             }
         })
 }
