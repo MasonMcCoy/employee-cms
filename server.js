@@ -1,6 +1,7 @@
 
 const mysql = require('mysql2');
 const inquirer = require("inquirer");
+const cTable = require("console.table");
 require('dotenv').config();
 
 // Create database connection
@@ -19,8 +20,22 @@ function connectDb () {
 }
 
 // Return all records of a given table
-function getTable(table, conn) {
+function getTable(table) {
+    conn = connectDb();
+
     conn.query(`SELECT * FROM ${table}`, (err, results) => {
+        if (err) {
+            console.log(err);
+        }
+        console.table(results);
+        conn.end();
+      });
+}
+
+function addRecord(table, cols, answers) {
+    conn = connectDb();
+
+    conn.query(`INSERT INTO ${table} (${cols}) VALUES ("${answers}")`, (err, results) => {
         if (err) {
             console.log(err);
         }
@@ -60,20 +75,45 @@ function renderMenu() {
 
             // View all Departments
             if (response.selection === "View all Departments") {
-                getTable("department", connectDb())
+                getTable("department")
             }
 
             // View all Roles
             if (response.selection === "View all Roles") {
-                getTable("roles", connectDb())
+                getTable("roles")
             }
 
             // View all Employees
             if (response.selection === "View all Employees") {
-                getTable("employee", connectDb())
+                getTable("employee")
             }
 
-            renderMenu();
+            // Add a Department
+            if (response.selection === "Add a Department") {
+                inquirer
+                    .prompt([
+                        {
+                            type: "input",
+                            message: "New Department Name",
+                            name: "dept_name"
+                        }
+                    ])
+                    .then(answer => {
+                        columns = "name"
+                        addRecord("department", columns, answer.dept_name)
+                        renderMenu();
+                    })
+            }
+
+            // Add a Role
+            if (response.selection === "Add a Role") {
+                
+            }
+
+            // Add an Employee
+            if (response.selection === "Add an Employee") {
+                
+            }
         })
 }
 
