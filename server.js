@@ -12,8 +12,7 @@ function connectDb () {
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME
-        },
-        console.log(`Connected to the employee_db database.`)
+        }
     );
 
     return connection;
@@ -29,6 +28,7 @@ function getTable(table) {
         }
         console.table(results);
         conn.end();
+        renderMenu();
       });
 }
 
@@ -54,9 +54,7 @@ function renderMenu() {
             name: "selection"
             }
         ])
-        .then(response => {
-            console.log(response.selection);
-            
+        .then(response => {            
             if (response.selection === "Exit") {
                 return;
             }
@@ -87,17 +85,16 @@ function renderMenu() {
                         }
                     ])
                     .then(answer => {
-                        const conn = connectDb ()
+                        const conn = connectDb ();
 
                         conn.query(`INSERT INTO department (name) VALUES ("${answer.dept_name}")`, (err, results) => {
                             if (err) {
                                 console.log(err);
                             }
-                            console.log(results);
+                            console.log(`${answer.dept_name} department added.`);
                             conn.end();
+                            renderMenu();
                           });
-
-                        renderMenu();
                     })
             }
 
@@ -122,19 +119,18 @@ function renderMenu() {
                     }
                 ])
                 .then(answer => {
-                    const conn = connectDb ()
+                    const conn = connectDb ();
 
                     conn.query(`INSERT INTO roles (title, salary, department_id)
                     VALUES ("${answer.role}", ${parseFloat(answer.salary)}, ${parseInt(answer.dept_id)})`,
-                    (err, results) => {
+                    (err) => {
                         if (err) {
                             console.log(err);
                         }
-                        console.log(results);
+                        console.log(`${answer.role} role added.`);
                         conn.end();
+                        renderMenu();
                       });
-
-                    renderMenu();
                 })
             }
 
@@ -144,14 +140,38 @@ function renderMenu() {
                 .prompt([
                     {
                         type: "input",
-                        message: "New Employee Name",
-                        name: "emp_name"
+                        message: "New Employee first name",
+                        name: "fst_name"
+                    },
+                    {
+                        type: "input",
+                        message: "New Employee last name",
+                        name: "lst_name"
+                    },
+                    {
+                        type: "input",
+                        message: "New Employee role ID",
+                        name: "role_id"
+                    },
+                    {
+                        type: "input",
+                        message: "New Employee manager ID",
+                        name: "mang_id"
                     }
                 ])
                 .then(answer => {
-                    columns = "name"
-                    addRecord("employee", columns, answer.emp_name)
-                    renderMenu();
+                    const conn = connectDb ();
+
+                    conn.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                    VALUES ("${answer.fst_name}", "${answer.lst_name}", ${parseInt(answer.role_id)}, ${parseInt(answer.mang_id)})`,
+                    (err) => {
+                        if (err) {
+                            console.log(err);
+                        }
+                        console.log(`Employee ${answer.fst_name} ${answer.lst_name} has been added.`);
+                        conn.end();
+                        renderMenu();
+                    })
                 })
             }
         })
