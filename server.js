@@ -4,33 +4,23 @@ const inquirer = require("inquirer");
 const cTable = require("console.table");
 require('dotenv').config();
 
-// Create database connection
-function connectDb () {
-    const connection = mysql.createConnection(
-        {
-        host: 'localhost',
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
-        }
-    );
+// Db connection credentials
+const connection = mysql.createConnection(
+    {
+    host: 'localhost',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+    }
+);
 
-    return connection;
-}
-
-// Return all records of a given table
-function getTable(table) {
-    const conn = connectDb();
-
-    conn.query(`SELECT * FROM ${table}`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        conn.end();
-        renderMenu();
-      });
-}
+// Connect to db and run Inquirer menu prompt
+connection.connect(err => {
+    if (err) {
+        console.log(err)
+    }
+    renderMenu();
+})
 
 // Render Inquirer CLI
 function renderMenu() {
@@ -56,22 +46,45 @@ function renderMenu() {
         ])
         .then(response => {            
             if (response.selection === "Exit") {
+                connection.end();
                 return;
             }
 
             // View all Departments
             if (response.selection === "View all Departments") {
-                getTable("department")
+                connection.query("SELECT id AS 'ID', name AS 'Department' FROM department", (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.table(results);
+                    renderMenu();
+                })
             }
 
             // View all Roles
             if (response.selection === "View all Roles") {
-                getTable("roles")
+                const sql = "SELECT roles.id AS 'ID', title AS 'Title', name AS 'Department', salary AS 'Salary' FROM roles JOIN department ON roles.department_id = department.id;"
+
+                connection.query(sql, (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.table(results);
+                    renderMenu();
+                })
             }
 
             // View all Employees
             if (response.selection === "View all Employees") {
-                getTable("employee")
+            const sql = "SELECT employee.id AS 'ID', employee.first_name AS 'First Name', employee.last_name AS 'Last Name', roles.title AS 'Title', department.name AS 'Department', roles.salary AS 'Salary', CONCAT (manager.first_name, ' ', manager.last_name) AS 'Manager' FROM employee LEFT JOIN roles ON (employee.role_id = roles.id) LEFT JOIN department ON (department.id = roles.department_id) LEFT JOIN employee manager ON employee.manager_id = manager.id;"
+
+            connection.query(sql, (err, results) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.table(results);
+                renderMenu();
+            })
             }
 
             // Add a Department
@@ -85,7 +98,7 @@ function renderMenu() {
                         }
                     ])
                     .then(answer => {
-                        const conn = connectDb ();
+                        // const conn = connectDb ();
 
                         conn.query(`INSERT INTO department (name) VALUES ("${answer.dept_name}")`, (err, results) => {
                             if (err) {
@@ -100,6 +113,14 @@ function renderMenu() {
 
             // Add a Role
             if (response.selection === "Add a Role") {
+                // const conn = connectDb ();
+                conn.query(`SELECT name FROM department`, (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    };
+                    console.log(results);
+                    conn.end();})
+                
                 inquirer
                 .prompt([
                     {
@@ -113,13 +134,14 @@ function renderMenu() {
                         name: "salary"
                     },
                     {
-                        type: "input",
-                        message: "Department ID",
-                        name: "dept_id"
+                        type: "list",
+                        message: "Which department does the role belong to?",
+                        choices: qDepts,
+                        name: "selDept"
                     }
                 ])
                 .then(answer => {
-                    const conn = connectDb ();
+                    // const conn = connectDb ();
 
                     conn.query(`INSERT INTO roles (title, salary, department_id)
                     VALUES ("${answer.role}", ${parseFloat(answer.salary)}, ${parseInt(answer.dept_id)})`,
@@ -160,7 +182,7 @@ function renderMenu() {
                     }
                 ])
                 .then(answer => {
-                    const conn = connectDb ();
+                    // const conn = connectDb ();
 
                     conn.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
                     VALUES ("${answer.fst_name}", "${answer.lst_name}", ${parseInt(answer.role_id)}, ${parseInt(answer.mang_id)})`,
@@ -177,4 +199,4 @@ function renderMenu() {
         })
 }
 
-renderMenu()
+// renderMenu()

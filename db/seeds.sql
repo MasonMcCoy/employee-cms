@@ -15,12 +15,12 @@ VALUES
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES 
 ("Todd", "Howard", 1, NULL),
-("Ron", "Burgundy", 2, 1),
-("Humpty", "Dumpty", 3, 7),
-("Samuel", "Jackson", 4, NULL),
-("Veronic", "Corningstone", 2, 1),
-("Robin", "Shirbotski", 3, 7),
-("Ben", "Franklin", 3, NULL),
-("Florence", "Nightengale", 3, 7),
-("Abbey", "Road", 4, 4),
-("Mike", "Tyson", 3, 7);
+("Ron", "Burgundy", 1, 1),
+("Humpty", "Dumpty", 1, 1),
+("Samuel", "Jackson", 1, 1),
+("Veronic", "Corningstone", 1, 1),
+("Robin", "Shirbotski", 1, 1),
+("Ben", "Franklin", 1, 1),
+("Florence", "Nightengale", 1, 1),
+("Abbey", "Road", 1, 1),
+("Mike", "Tyson", 1, 1);
