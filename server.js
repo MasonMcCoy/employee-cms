@@ -152,41 +152,54 @@ function renderMenu() {
 
             // Add an Employee
             if (response.selection === "Add an Employee") {
-                inquirer
-                .prompt([
-                    {
-                        type: "input",
-                        message: "New Employee first name",
-                        name: "fst_name"
-                    },
-                    {
-                        type: "input",
-                        message: "New Employee last name",
-                        name: "lst_name"
-                    },
-                    {
-                        type: "input",
-                        message: "New Employee role ID",
-                        name: "role_id"
-                    },
-                    {
-                        type: "input",
-                        message: "New Employee manager ID",
-                        name: "mang_id"
-                    }
-                ])
-                .then(answer => {
-                    connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
-                    VALUES ("${answer.fst_name}", "${answer.lst_name}", ${parseInt(answer.role_id)}, ${parseInt(answer.mang_id)})`,
-                    (err) => {
-                        if (err) {
-                            console.log(err);
-                        }
-                        console.log(`Employee ${answer.fst_name} ${answer.lst_name} has been added.`);
-                        
-                        renderMenu();
-                    })
+                connection.query(`SELECT title FROM roles`, (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    };
+                    const qRoles = results.map(role => role.title);
+
+                    inquirer
+                        .prompt([
+                            {
+                                type: "input",
+                                message: "New Employee first name",
+                                name: "fst_name"
+                            },
+                            {
+                                type: "input",
+                                message: "New Employee last name",
+                                name: "lst_name"
+                            },
+                            {
+                                type: "list",
+                                message: "What is the employee's role?",
+                                choices: qRoles,
+                                name: "role_id"
+                            }
+                        ])
+                        .then(answer => {
+                            connection.query(`SELECT employee.id, first_name, last_name, manager_id, title FROM employee JOIN roles ON employee.role_id = roles.id JOIN department ON roles.department_id = department.id WHERE title = "${answer.role_id}" AND manager_id IS NULL;`, 
+                            (err, results) => {
+                                if (err) {
+                                    console.log(err);
+                                }
+
+                                // Determines department manager, assigns first employee added to department as manager
+                                let roleMang = results.map(mang => mang.id);
+                                if (roleMang.length < 1) {
+                                    roleMang = null;
+                                }
+
+                                connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answer.fst_name}", "${answer.lst_name}", ${qRoles.indexOf(answer.role_id) + 1}, ${roleMang})`, (err) => {
+                                    if (err) {
+                                        console.log(err)
+                                    }
+                                    console.log(`${answer.fst_name} ${answer.lst_name} added as employee.`);
+                                    renderMenu();
+                                })
+                            })
+                        })
                 })
-            }
-        })
+        }
+    })
 }
