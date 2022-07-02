@@ -200,6 +200,75 @@ function renderMenu() {
                             })
                         })
                 })
-        }
-    })
+            }
+
+            // Update an employee's role
+            // THIS DOES NOT FULLY WORK
+            if (response.selection === "Update an Employee Role") {
+                connection.query("SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employee;", (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    
+                    console.log(results)
+                    const empNames = results.map(emp => emp.name);
+                    console.log(empNames);
+
+                    inquirer
+                        .prompt([
+                            {
+                                type: "list",
+                                message: "Choose an employee to update:",
+                                choices: empNames,
+                                name: "up_emp"
+                            }
+                        ])
+                        .then(answer => {
+                            const empID = empNames.indexOf(answer.up_emp) + 1
+                            connection.query(`SELECT * FROM employee WHERE id = ${empID}`, (err, results) => {
+                                if (err) {
+                                    console.log(err)
+                                }
+
+                                const empRole = results.map(role => role.role_id)
+
+                                connection.query(`SELECT role.id, employee.id FROM roles JOIN employee ON roles.id = employee.role_id WHERE employee.role_id != ${empRole} AND manager_id IS NULL`,
+                                (err, results) => {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+
+                                    console.log(results);
+                                    const newRoles = results.map(role => role.title);
+                                    const newMang = results.map(mang => mang.id);
+
+                                    console.log(newRoles);
+                                    console.log(newMang);
+
+                                    inquirer
+                                        .prompt([
+                                            {
+                                                type: "list",
+                                                message: "Assign a New Role:",
+                                                choices: newRoles,
+                                                name: "new_role"
+                                            }
+                                        ])
+                                        .then(answer => {
+                                            console.log(answer);
+
+                                            connection.query(`UPDATE employee SET role_id = ${newRoles.indexOf(answer.new_role) + 1}, manager_id = ${newRoles.indexOf(newMang)} WHERE id = ${empID}`, (err) => {
+                                                if (err) {
+                                                    console.log(err);
+                                                }
+                                                console.log("Employee updated!");
+                                                renderMenu();
+                                            })
+                                        })
+                                })
+                            })
+                        })
+                })
+            }
+        })
 }
