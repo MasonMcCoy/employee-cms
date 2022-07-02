@@ -98,14 +98,12 @@ function renderMenu() {
                         }
                     ])
                     .then(answer => {
-                        // const conn = connectDb ();
-
-                        conn.query(`INSERT INTO department (name) VALUES ("${answer.dept_name}")`, (err, results) => {
+                        connection.query(`INSERT INTO department (name) VALUES ("${answer.dept_name}")`, (err, results) => {
                             if (err) {
                                 console.log(err);
                             }
                             console.log(`${answer.dept_name} department added.`);
-                            conn.end();
+                            
                             renderMenu();
                           });
                     })
@@ -113,47 +111,43 @@ function renderMenu() {
 
             // Add a Role
             if (response.selection === "Add a Role") {
-                // const conn = connectDb ();
-                conn.query(`SELECT name FROM department`, (err, results) => {
+                connection.query(`SELECT name FROM department`, (err, results) => {
                     if (err) {
                         console.log(err);
                     };
-                    console.log(results);
-                    conn.end();})
-                
-                inquirer
-                .prompt([
-                    {
-                        type: "input",
-                        message: "New Role Title",
-                        name: "role"
-                    },
-                    {
-                        type: "input",
-                        message: "Role Salary",
-                        name: "salary"
-                    },
-                    {
-                        type: "list",
-                        message: "Which department does the role belong to?",
-                        choices: qDepts,
-                        name: "selDept"
-                    }
-                ])
-                .then(answer => {
-                    // const conn = connectDb ();
+                    const qDepts = results.map(dept => dept.name);
 
-                    conn.query(`INSERT INTO roles (title, salary, department_id)
-                    VALUES ("${answer.role}", ${parseFloat(answer.salary)}, ${parseInt(answer.dept_id)})`,
-                    (err) => {
-                        if (err) {
-                            console.log(err);
-                        }
-                        console.log(`${answer.role} role added.`);
-                        conn.end();
-                        renderMenu();
-                      });
-                })
+                    inquirer
+                        .prompt([
+                            {
+                                type: "input",
+                                message: "New Role Title",
+                                name: "role"
+                            },
+                            {
+                                type: "input",
+                                message: "Role Salary",
+                                name: "salary"
+                            },
+                            {
+                                type: "list",
+                                message: "Which department does the role belong to?",
+                                choices: qDepts,
+                                name: "selDept"
+                            }
+                        ])
+                        .then(answer => {
+                            connection.query(`INSERT INTO roles (title, salary, department_id)
+                            VALUES ("${answer.role}", ${parseFloat(answer.salary)}, ${qDepts.indexOf(answer.selDept) + 1})`,
+                            (err) => {
+                                if (err) {
+                                    console.log(err);
+                                }
+                                console.log(`${answer.role} role added.`);
+                                renderMenu();
+                            });
+                        })
+                    })
             }
 
             // Add an Employee
@@ -182,21 +176,17 @@ function renderMenu() {
                     }
                 ])
                 .then(answer => {
-                    // const conn = connectDb ();
-
-                    conn.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                    connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
                     VALUES ("${answer.fst_name}", "${answer.lst_name}", ${parseInt(answer.role_id)}, ${parseInt(answer.mang_id)})`,
                     (err) => {
                         if (err) {
                             console.log(err);
                         }
                         console.log(`Employee ${answer.fst_name} ${answer.lst_name} has been added.`);
-                        conn.end();
+                        
                         renderMenu();
                     })
                 })
             }
         })
 }
-
-// renderMenu()
